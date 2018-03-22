@@ -27,6 +27,28 @@ namespace tabuleiro
             qteMovimentos++;
         }//incrementarQteMovimentos
 
+        public bool existemMovimentosPosssiveis()
+        {
+            bool[,] mat = movimentosPossiveis();
+
+            for (int i = 0; i < tab.linhas; i++)
+            {
+                for (int j = 0; j < tab.colunas; j++)
+                {
+                    if(mat[i, j])
+                    {
+                        return true;
+                    }
+                }
+            }//for
+            return false;
+        }//existemMovimentosPossiveis
+
+        public bool podeMoverPara(Posicao pos)
+        {
+            return movimentosPossiveis()[pos.linha, pos.coluna];
+        }//podeMoverPara
+
         public abstract bool[,] movimentosPossiveis();
 
     }
