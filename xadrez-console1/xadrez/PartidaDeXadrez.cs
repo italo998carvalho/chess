@@ -35,7 +35,7 @@ namespace xadrez
             p.incrementarQteMovimentos();
             Peca pecaCapturada = tab.retirarPeca(destino);
             tab.colocarPeca(p, destino);
-            if(pecaCapturada != null)
+            if (pecaCapturada != null)
             {
                 capturadas.Add(pecaCapturada);
             }
@@ -46,7 +46,7 @@ namespace xadrez
         {
             Peca p = tab.retirarPeca(destino);
             p.decrementarQteMovimentos();
-            if(pecaCapturada != null)
+            if (pecaCapturada != null)
             {
                 tab.colocarPeca(pecaCapturada, destino);
                 capturadas.Remove(pecaCapturada);
@@ -58,13 +58,13 @@ namespace xadrez
         {
             Peca pecaCapturada = executarMovimento(origem, destino);
 
-            if(estaEmXeque(jogadorAtual))
+            if (estaEmXeque(jogadorAtual))
             {
                 desfazMovimento(origem, destino, pecaCapturada);
                 throw new TabuleiroException("Você não pode se colocar em xeque!");
             }
 
-            if(estaEmXeque(adversaria(jogadorAtual)))
+            if (estaEmXeque(adversaria(jogadorAtual)))
             {
                 xeque = true;
             }
@@ -73,23 +73,30 @@ namespace xadrez
                 xeque = false;
             }
 
-            turno++;
-            mudaJogador();
+            if (testeXequemate(adversaria(jogadorAtual)))
+            {
+                terminada = true;
+            }
+            else
+            {
+                turno++;
+                mudaJogador();
+            }
         }//realizaJogada
 
         public void validarPosicaoDeOrigem(Posicao pos)
         {
-            if(tab.peca(pos) == null)
+            if (tab.peca(pos) == null)
             {
                 throw new TabuleiroException("Não existe peça na posição de origem escolhida!");
             }
 
-            if(jogadorAtual != tab.peca(pos).cor)
+            if (jogadorAtual != tab.peca(pos).cor)
             {
                 throw new TabuleiroException("A peça de origem escolhida não é sua!");
             }
 
-            if(!tab.peca(pos).existemMovimentosPosssiveis())
+            if (!tab.peca(pos).existemMovimentosPosssiveis())
             {
                 throw new TabuleiroException("Não há movimentos possíveis para a peça de origem escolhida!");
             }
@@ -97,7 +104,7 @@ namespace xadrez
 
         public void validarPosicaoDeDestino(Posicao origem, Posicao destino)
         {
-            if(!tab.peca(origem).podeMoverPara(destino))
+            if (!tab.peca(origem).podeMoverPara(destino))
             {
                 throw new TabuleiroException("Posição de destino inválida!");
             }
@@ -105,7 +112,7 @@ namespace xadrez
 
         private void mudaJogador()
         {
-            if(jogadorAtual == Cor.Branca)
+            if (jogadorAtual == Cor.Branca)
             {
                 jogadorAtual = Cor.Preta;
             }
@@ -118,9 +125,9 @@ namespace xadrez
         public HashSet<Peca> pecasCapturadas(Cor cor)
         {
             HashSet<Peca> aux = new HashSet<Peca>();
-            foreach(Peca x in capturadas)
+            foreach (Peca x in capturadas)
             {
-                if(x.cor == cor)
+                if (x.cor == cor)
                 {
                     aux.Add(x);
                 }
@@ -156,9 +163,9 @@ namespace xadrez
 
         private Peca rei(Cor cor)
         {
-            foreach(Peca x in pecasEmJogo(cor))
+            foreach (Peca x in pecasEmJogo(cor))
             {
-                if(x is Rei)
+                if (x is Rei)
                 {
                     return x;
                 }
@@ -173,16 +180,47 @@ namespace xadrez
             {
                 throw new TabuleiroException("Não tem rei da cor " + cor + " no tabuleiro!");
             }
-            foreach(Peca x in pecasEmJogo(adversaria(cor)))
+            foreach (Peca x in pecasEmJogo(adversaria(cor)))
             {
                 bool[,] mat = x.movimentosPossiveis();
-                if(mat[R.posicao.linha, R.posicao.coluna])
+                if (mat[R.posicao.linha, R.posicao.coluna])
                 {
                     return true;
                 }
             }
             return false;
         }//estaEmXeque
+
+        public bool testeXequemate(Cor cor)
+        {
+            if (!estaEmXeque(cor))
+            {
+                return false;
+            }
+            foreach (Peca x in pecasEmJogo(cor))
+            {
+                bool[,] mat = x.movimentosPossiveis();
+                for (int i = 0; i < tab.linhas; i++)
+                {
+                    for (int j = 0; j < tab.colunas; j++)
+                    {
+                        if (mat[i, j])
+                        {
+                            Posicao origem = x.posicao;
+                            Posicao destino = new Posicao(i, j);
+                            Peca pecaCapturada = executarMovimento(origem, destino);
+                            bool testeXeque = estaEmXeque(cor);
+                            desfazMovimento(origem, destino, pecaCapturada);
+                            if (!testeXeque)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }//for
+            }
+            return true;
+        }//testeXequemate
 
         public void colocarNovaPeca(char coluna, int linha, Peca peca)
         {
